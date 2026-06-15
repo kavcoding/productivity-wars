@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Productivity Wars — GENERAL vs CEO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #e9eaed;
+      --surface: #ffffff;
+      --surface2: #f1f2f4;
+      --surface3: #e4e6ea;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.20);
+      --text: #20222a;
+      --muted: #5b5f6b;
+      --muted2: #8a8f9c;
+      --shadow: 0 6px 18px -10px rgba(0,0,0,0.22);
+
+      /* THE GENERAL — military teal (darkened for light bg) */
+      --gen: #0d9b78;
+      --gen-dim: rgba(13,155,120,0.12);
+      --gen-border: rgba(13,155,120,0.40);
+      --gen-glow: rgba(13,155,120,0.28);
+
+      /* THE CEO — corporate orange (darkened for light bg) */
+      --ceo: #d9551f;
+      --ceo-dim: rgba(217,85,31,0.12);
+      --ceo-border: rgba(217,85,31,0.40);
+      --ceo-glow: rgba(217,85,31,0.28);
+
+      /* victor gold (dark amber for readable text on light) */
+      --gold: #9a7400;
+      --gold-dim: rgba(245,197,24,0.22);
+      --gold-border: rgba(154,116,0,0.45);
+
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      background:
+        radial-gradient(1100px 520px at 50% -10%, rgba(255,255,255,0.035), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .display { font-family: 'Russo One', sans-serif; letter-spacing: .01em; }
+
+    /* ── Layout ── */
+    .app { max-width: 780px; margin: 0 auto; padding: 0 16px 96px; position: relative; z-index: 2; }
+
+    header {
+      padding: 26px 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo { font-family: 'Russo One', sans-serif; font-size: 19px; letter-spacing: .04em; text-transform: uppercase; line-height: 1.1; }
+    .logo .v { color: var(--gold); }
+    .logo small { display:block; font-family:'Chakra Petch'; font-size:10px; letter-spacing:.34em; color:var(--muted2); font-weight:600; margin-top:2px; }
+
+    .date-chip {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      white-space: nowrap;
+    }
+
+    /* ── Scoreboard ── */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      background: linear-gradient(180deg, var(--surface), #f4f5f7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 22px;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+
+    .score-player { padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .score-player.p1 { align-items: flex-start; }
+    .score-player.p2 { align-items: flex-end; text-align: right; }
+    .score-player.lead-gen { box-shadow: inset 0 3px 0 0 var(--gen); }
+    .score-player.lead-ceo { box-shadow: inset 0 3px 0 0 var(--ceo); }
+
+    .score-name {
+      font-family: 'Russo One', sans-serif;
+      font-size: 15px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .score-player.p2 .score-name { flex-direction: row-reverse; }
+    .score-name .crown { color: var(--gold); font-size: 14px; display:none; }
+    .score-name.win .crown { display: inline; }
+
+    .nm-gen { color: var(--gen); }
+    .nm-ceo { color: var(--ceo); }
+
+    .tally { display: flex; align-items: baseline; gap: 6px; }
+    .tally-num { font-family: 'Russo One', sans-serif; font-size: 46px; line-height: .9; }
+    .tn-gen { color: var(--gen); text-shadow: 0 0 24px var(--gen-glow); }
+    .tn-ceo { color: var(--ceo); text-shadow: 0 0 24px var(--ceo-glow); }
+    .tally-lbl { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .sins-line { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted2); }
+    .sins-line b { color: #d92d4f; font-weight: 700; }
+
+    .score-vs {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 14px;
+      font-family: 'Russo One', sans-serif; font-size: 13px;
+      color: var(--muted2);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,0.035);
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex; gap: 4px;
+      margin-bottom: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px;
+    }
+    .nav-btn {
+      flex: 1; padding: 9px 8px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: 7px; cursor: pointer;
+      background: transparent; color: var(--muted);
+      transition: all .15s;
+    }
+    .nav-btn:hover { color: var(--text); }
+    .nav-btn.active { background: var(--surface3); color: var(--text); box-shadow: 0 0 0 1px var(--border2); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+    .card-label {
+      font-family: 'Russo One', sans-serif;
+      font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .tick { width: 14px; height: 3px; border-radius: 2px; display:inline-block; }
+    .tick-gen { background: var(--gen); } .tick-ceo { background: var(--ceo); }
+    .tick-sin { background: #d92d4f; }
+
+    /* ── Player selector ── */
+    .psel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .psel-btn {
+      padding: 12px 10px;
+      font-family: 'Russo One', sans-serif;
+      font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer; background: var(--surface); color: var(--muted);
+      transition: all .15s;
+    }
+    .psel-btn:hover { color: var(--text); border-color: var(--border2); }
+    .psel-btn.gen-active { background: var(--gen-dim); color: var(--gen); border-color: var(--gen-border); box-shadow: 0 0 18px -6px var(--gen-glow); }
+    .psel-btn.ceo-active { background: var(--ceo-dim); color: var(--ceo); border-color: var(--ceo-border); box-shadow: 0 0 18px -6px var(--ceo-glow); }
+
+    /* ── Form ── */
+    .form-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .form-row.sin-row { grid-template-columns: 1fr auto; }
+
+    input[type=text], input[type=number], select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 14px;
+      padding: 0 12px; height: 40px;
+      outline: none; transition: border .15s, box-shadow .15s;
+    }
+    input[type=text] { width: 100%; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    input::placeholder { color: var(--muted2); }
+    input:focus, select:focus { border-color: var(--border2); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+    select { appearance: none; padding: 0 30px 0 12px; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a98' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; }
+    option { background: var(--surface2); }
+
+    .btn {
+      height: 40px; padding: 0 18px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 13px; font-weight: 600; letter-spacing: .04em;
+      border-radius: 8px; border: 1px solid var(--border2);
+      cursor: pointer; background: var(--surface2); color: var(--text);
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn:hover { background: var(--surface3); }
+    .btn-add-gen { border-color: var(--gen-border); color: var(--gen); background: var(--gen-dim); }
+    .btn-add-gen:hover { background: rgba(34,211,166,0.2); }
+    .btn-add-ceo { border-color: var(--ceo-border); color: var(--ceo); background: var(--ceo-dim); }
+    .btn-add-ceo:hover { background: rgba(255,122,69,0.2); }
+    .btn-add-sin { border-color: rgba(255,82,119,0.35); color: #d92d4f; background: rgba(255,82,119,0.1); }
+    .btn-add-sin:hover { background: rgba(255,82,119,0.2); }
+    .btn-full { width: 100%; }
+
+    .btn-lock {
+      width: 100%; padding: 16px;
+      font-family: 'Russo One', sans-serif;
+      font-size: 15px; letter-spacing: .08em; text-transform: uppercase;
+      border-radius: var(--radius);
+      border: 1px solid var(--gold-border);
+      background: linear-gradient(180deg, var(--gold-dim), rgba(245,197,24,0.04));
+      color: var(--gold); cursor: pointer; transition: all .15s;
+    }
+    .btn-lock:hover { background: rgba(245,197,24,0.18); box-shadow: 0 0 24px -8px rgba(245,197,24,0.6); }
+
+    /* ── Entry list ── */
+    .entry { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; gap: 10px; }
+    .entry-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .entry-left span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .cat-pill { font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0; }
+    .cp-dur { background: var(--surface3); color: var(--muted); border: 1px solid var(--border); }
+    .cp-sin { background: rgba(255,82,119,0.14); color: #d92d4f; }
+    input.dur { width: 130px; }
+    @media (max-width: 520px) { input.dur { width: 96px; } }
+
+    .del { background: none; border: none; cursor: pointer; color: var(--muted2); font-size: 20px; line-height: 1; padding: 0 4px; transition: color .12s; flex-shrink: 0; }
+    .del:hover { color: #d92d4f; }
+
+    /* ── Chips ── */
+    .chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 13px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      color: var(--muted); background: var(--surface2);
+      transition: all .15s;
+    }
+    .chip:hover { border-color: var(--border2); color: var(--text); }
+    .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted2); flex-shrink: 0; transition: all .15s; }
+    .chip.on-gen { border-color: var(--gen-border); background: var(--gen-dim); color: var(--gen); }
+    .chip.on-gen .dot { background: var(--gen); box-shadow: 0 0 8px var(--gen); }
+    .chip.on-ceo { border-color: var(--ceo-border); background: var(--ceo-dim); color: var(--ceo); }
+    .chip.on-ceo .dot { background: var(--ceo); box-shadow: 0 0 8px var(--ceo); }
+    .chip.sin.on { border-color: rgba(217,45,79,0.4); background: rgba(217,45,79,0.10); color: #c01f40; }
+    .chip.sin.on .dot { background: #d92d4f; box-shadow: 0 0 8px #d92d4f; }
+
+    /* ── Verdict modal ── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(4px);
+      display: none; align-items: flex-start; justify-content: center;
+      padding: 40px 16px; overflow-y: auto;
+    }
+    .overlay.open { display: flex; }
+    .verdict {
+      max-width: 620px; width: 100%;
+      background: linear-gradient(180deg, var(--surface), #f4f5f7);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: 0 24px 60px -20px rgba(0,0,0,0.7);
+      animation: pop .25s ease;
+    }
+    @keyframes pop { from { transform: translateY(12px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    .verdict-head { text-align: center; margin-bottom: 20px; }
+    .verdict-kicker { font-size: 11px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+    .verdict-title { font-family: 'Russo One', sans-serif; font-size: 26px; text-transform: uppercase; margin-top: 6px; }
+
+    .roast {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 12px; background: var(--surface2);
+    }
+    .roast.gen { border-left: 3px solid var(--gen); }
+    .roast.ceo { border-left: 3px solid var(--ceo); }
+    .roast-name { font-family: 'Russo One', sans-serif; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; display:flex; justify-content:space-between; align-items:center; }
+    .roast-stat { font-family:'Chakra Petch'; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+    .roast-body { font-size: 14.5px; line-height: 1.55; color: var(--text); }
+
+    .verdict-banner {
+      text-align: center; padding: 14px;
+      border-radius: var(--radius); margin: 16px 0;
+      font-family: 'Russo One', sans-serif; font-size: 17px; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .vb-gen { background: var(--gen-dim); color: var(--gen); border: 1px solid var(--gen-border); }
+    .vb-ceo { background: var(--ceo-dim); color: var(--ceo); border: 1px solid var(--ceo-border); }
+    .vb-tie { background: var(--surface3); color: var(--muted); border: 1px solid var(--border2); }
+
+    .who-label { font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align:center; margin-bottom: 10px; }
+    .who-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .who-btn {
+      padding: 12px 8px; border-radius: var(--radius); cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+      font-family: 'Russo One', sans-serif; font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
+      transition: all .15s;
+    }
+    .who-btn:hover { border-color: var(--border2); color: var(--text); }
+    .who-btn.sel-gen { background: var(--gen-dim); color: var(--gen); border-color: var(--gen-border); }
+    .who-btn.sel-ceo { background: var(--ceo-dim); color: var(--ceo); border-color: var(--ceo-border); }
+    .who-btn.sel-tie { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+
+    .verdict-actions { display: grid; grid-template-columns: auto 1fr; gap: 8px; }
+
+    /* ── History ── */
+    .hist-day {
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      margin-bottom: 12px; overflow: hidden; background: var(--surface);
+    }
+    .hist-top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; cursor: pointer; gap: 12px;
+      transition: background .15s;
+    }
+    .hist-top:hover { background: var(--surface2); }
+    .hist-date { font-family: 'Russo One', sans-serif; font-size: 13px; letter-spacing: .04em; }
+    .hist-meta { font-size: 11px; color: var(--muted); letter-spacing: .04em; margin-top: 2px; }
+    .win-badge { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; white-space: nowrap; font-family:'Russo One'; }
+    .wb-gen { background: var(--gen-dim); color: var(--gen); border: 1px solid var(--gen-border); }
+    .wb-ceo { background: var(--ceo-dim); color: var(--ceo); border: 1px solid var(--ceo-border); }
+    .wb-tie { background: var(--surface3); color: var(--muted); border: 1px solid var(--border); }
+    .hist-report { padding: 0 18px; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s ease; }
+    .hist-report.open { max-height: 1200px; padding: 4px 18px 18px; }
+    .chev { color: var(--muted2); transition: transform .2s; flex-shrink:0; }
+    .hist-top.open .chev { transform: rotate(180deg); }
+
+    /* ── Standings ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 14px; }
+    .stat-lbl { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .stat-val { font-family: 'Russo One', sans-serif; font-size: 28px; line-height: 1; }
+
+    .lead-bar { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; display:flex; margin: 14px 0 8px; }
+    .lead-fill-gen { height: 100%; background: var(--gen); transition: width .5s; }
+    .lead-fill-ceo { height: 100%; background: var(--ceo); transition: width .5s; }
+
+    .timeline { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+    .sdot { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family:'Russo One'; font-size: 11px; }
+    .sd-gen { background: var(--gen-dim); color: var(--gen); border: 1px solid var(--gen-border); }
+    .sd-ceo { background: var(--ceo-dim); color: var(--ceo); border: 1px solid var(--ceo-border); }
+    .sd-tie { background: var(--surface2); color: var(--muted2); border: 1px solid var(--border); }
+
+    .legend { display: flex; gap: 18px; margin-top: 14px; font-size: 12px; color: var(--muted); align-items: center; flex-wrap: wrap; }
+    .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Month nav ── */
+    .month-nav {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 8px 12px; margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+    .mn-btn {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+      font-family: 'Russo One', sans-serif; font-size: 18px; line-height: 1;
+      display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0;
+    }
+    .mn-btn:hover:not(:disabled) { background: var(--surface3); border-color: var(--border2); }
+    .mn-btn:disabled { opacity: .28; cursor: default; }
+    .mn-label { font-family: 'Russo One', sans-serif; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; text-align: center; flex: 1; }
+    .mn-tag { display:block; font-family:'Chakra Petch'; font-size: 10px; font-weight: 600; letter-spacing: .14em; color: var(--gold); margin-top: 2px; }
+
+    /* ── Settings ── */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .field-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .danger-zone { border-color: rgba(255,82,119,0.22); }
+    .btn-danger { color: #d92d4f; border-color: rgba(255,82,119,0.35); background: rgba(255,82,119,0.08); }
+    .btn-danger:hover { background: rgba(255,82,119,0.18); }
+    .btn-primary { background: #f0c01a; color: #1a1500; border-color: #d9ab10; font-weight: 700; }
+    .btn-primary:hover { background: #ffd23a; }
+
+    /* ── Misc ── */
+    .screen { display: none; animation: fade .2s ease; }
+    .screen.active { display: block; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .empty { font-size: 13px; color: var(--muted); text-align: center; padding: 28px 0; }
+    .hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; letter-spacing: .03em; }
+    .today-locked {
+      background: var(--gold-dim); border: 1px solid var(--gold-border);
+      border-radius: var(--radius); padding: 14px 16px;
+      font-family:'Russo One'; font-size: 13px; letter-spacing:.04em; text-transform:uppercase; color: var(--gold);
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      .tally-num { font-size: 38px; }
+      .score-player { padding: 18px 16px; }
+      .logo { font-size: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, body::before { animation: none !important; transition: none !important; }
+    }
+
+    /* ── Firebase config banner ── */
+    #config-banner {
+      background: rgba(245,197,24,0.08);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 13px 16px; margin-bottom: 18px;
+      font-size: 12.5px; color: var(--gold); display: none; letter-spacing: .02em;
+    }
+    #config-banner code { background: rgba(245,197,24,0.16); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Productivity <span class="v">Wars</span><small>General vs CEO</small></div>
+    <div class="date-chip" id="date-chip"></div>
+  </header>
+
+  <div id="config-banner">
+    ⚠ Battlefield offline. Firebase is not configured. Open <code>index.html</code> and replace the placeholder values in the <code>firebaseConfig</code> object near the bottom. Until then, scores won't sync between you two.
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard" id="scoreboard">
+    <div class="score-player p1" id="sb-p0">
+      <div class="score-name nm-gen win" id="sb-p0-name"><span class="crown">♛</span><span>THE GENERAL</span></div>
+      <div class="tally"><span class="tally-num tn-gen" id="sb-p0-deeds">0</span><span class="tally-lbl">deeds</span></div>
+      <div class="sins-line"><b id="sb-p0-sins">0</b> sins</div>
+    </div>
+    <div class="score-vs">VS</div>
+    <div class="score-player p2" id="sb-p1">
+      <div class="score-name nm-ceo" id="sb-p1-name"><span>THE CEO</span><span class="crown">♛</span></div>
+      <div class="tally"><span class="tally-num tn-ceo" id="sb-p1-deeds">0</span><span class="tally-lbl">deeds</span></div>
+      <div class="sins-line"><b id="sb-p1-sins">0</b> sins</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <button class="nav-btn active" onclick="goTo('today')">Today</button>
+    <button class="nav-btn" onclick="goTo('history')">Dossier</button>
+    <button class="nav-btn" onclick="goTo('standings')">War</button>
+    <button class="nav-btn" onclick="goTo('settings')">Settings</button>
+  </nav>
+
+  <!-- TODAY -->
+  <div id="screen-today" class="screen active">
+    <div class="psel">
+      <button class="psel-btn gen-active" id="ps0" onclick="selPlayer(0)">THE GENERAL</button>
+      <button class="psel-btn" id="ps1" onclick="selPlayer(1)">THE CEO</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="tick tick-gen" id="deed-tick"></span>Deeds: what you conquered</div>
+      <div class="card-sub">Log every win. Tap the chips for the usual rituals, or add your own.</div>
+      <div class="form-row">
+        <input type="text" id="t-name" placeholder="What did you accomplish?" onkeydown="if(event.key==='Enter')addDeed()" />
+        <input type="number" id="t-dur" class="dur" min="1" placeholder="Mins" onkeydown="if(event.key==='Enter')addDeed()" />
+        <button class="btn btn-add-gen" id="add-deed-btn" onclick="addDeed()">Log</button>
+      </div>
+      <div id="goodhabit-grid" class="chip-grid" style="margin-top:6px"></div>
+      <div id="deed-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="tick tick-sin"></span>Sins: what shamed you</div>
+      <div class="card-sub">Be honest. Every lazy crime here hands the enemy ammunition.</div>
+      <div class="form-row">
+        <input type="text" id="s-name" placeholder="Confess a transgression…" onkeydown="if(event.key==='Enter')addSin()" />
+        <input type="number" id="s-dur" class="dur" min="1" placeholder="Mins" onkeydown="if(event.key==='Enter')addSin()" />
+        <button class="btn btn-add-sin" onclick="addSin()">Confess</button>
+      </div>
+      <div id="sin-grid" class="chip-grid" style="margin-top:6px"></div>
+      <div id="sin-list"></div>
+    </div>
+
+    <div id="lock-area">
+      <button class="btn-lock" onclick="openVerdict()">⚖ Pass judgment on today</button>
+      <div class="hint">Both fighters should finish logging before judgment is passed</div>
+    </div>
+  </div>
+
+  <!-- HISTORY / DOSSIER -->
+  <div id="screen-history" class="screen">
+    <div id="dossier-monthnav"></div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- STANDINGS / WAR -->
+  <div id="screen-standings" class="screen">
+    <div id="war-monthnav"></div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-lbl">Battles</div><div class="stat-val" id="st-days">0</div></div>
+      <div class="stat-card"><div class="stat-lbl" id="st-p0-lbl">General</div><div class="stat-val nm-gen" id="st-p0-wins">0</div></div>
+      <div class="stat-card"><div class="stat-lbl" id="st-p1-lbl">CEO</div><div class="stat-val nm-ceo" id="st-p1-wins">0</div></div>
+      <div class="stat-card"><div class="stat-lbl">Stalemates</div><div class="stat-val" style="color:var(--muted)" id="st-ties">0</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Theatre of war</div>
+      <div id="overall-lead"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Current streak</div>
+      <div id="streak-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Campaign timeline</div>
+      <div class="timeline" id="timeline"></div>
+      <div class="legend" style="margin-top:14px">
+        <span style="display:inline-flex;align-items:center;gap:6px"><span class="legend-dot" style="background:var(--gen)"></span><span id="leg-p0">General</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span class="legend-dot" style="background:var(--ceo)"></span><span id="leg-p1">CEO</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span class="legend-dot" style="background:var(--muted2)"></span>Stalemate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="screen-settings" class="screen">
+    <div class="card">
+      <div class="card-label">Combatants</div>
+      <div class="settings-grid">
+        <div><div class="field-label">Fighter 1</div><input type="text" id="set-p0" style="width:100%" /></div>
+        <div><div class="field-label">Fighter 2</div><input type="text" id="set-p1" style="width:100%" /></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="saveNames()">Save names</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="tick tick-gen"></span>Good-habit rituals</div>
+      <div class="card-sub">Quick-tap chips for things you aim to do daily.</div>
+      <div class="form-row sin-row">
+        <input type="text" id="gh-name" placeholder="e.g. Morning workout" onkeydown="if(event.key==='Enter')addGoodHabit()" />
+        <button class="btn" onclick="addGoodHabit()">Add</button>
+      </div>
+      <div id="goodhabit-settings-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="tick tick-sin"></span>Sin presets</div>
+      <div class="card-sub">Common crimes you want one-tap shame buttons for.</div>
+      <div class="form-row sin-row">
+        <input type="text" id="sn-name" placeholder="e.g. Doomscrolled in bed" onkeydown="if(event.key==='Enter')addSinPreset()" />
+        <button class="btn" onclick="addSinPreset()">Add</button>
+      </div>
+      <div id="sin-settings-list"></div>
+    </div>
+
+    <div class="card danger-zone">
+      <div class="card-label" style="color:#d92d4f">Scorched earth</div>
+      <div class="card-sub">Wipe all history, deeds, sins and start the war fresh.</div>
+      <button class="btn btn-full btn-danger" onclick="resetAll()">Reset all data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verdict overlay -->
+<div class="overlay" id="verdict-overlay">
+  <div class="verdict" id="verdict-card"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     FIREBASE — replace these placeholder values
+     with your own from the Firebase console.
+     (Project settings ▸ Your apps ▸ Web app ▸ Config)
+     ═══════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
+  authDomain:        "REPLACE_WITH_YOUR_AUTH_DOMAIN",
+  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket:     "REPLACE_WITH_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
+  appId:             "REPLACE_WITH_YOUR_APP_ID"
+};
+
+const configured = !Object.values(firebaseConfig).some(v => String(v).startsWith("REPLACE_"));
+if (!configured) document.getElementById('config-banner').style.display = 'block';
+
+const app = configured ? initializeApp(firebaseConfig) : null;
+const db  = configured ? getFirestore(app) : null;
+
+/* ══════════════════ STATE ══════════════════ */
+const DEFAULT_GOOD = [
+  { id:'g1', name:'Morning workout',     cat:'gym' },
+  { id:'g2', name:'Studied 2h+',         cat:'study' },
+  { id:'g3', name:'Work task crushed',   cat:'work' },
+  { id:'g4', name:'Ate clean',           cat:'personal' },
+  { id:'g5', name:'No phone till noon',  cat:'personal' },
+  { id:'g6', name:'Read 30 mins',        cat:'personal' },
+];
+const DEFAULT_SINS = [
+  { id:'s1', name:'Slept past noon' },
+  { id:'s2', name:'Doomscrolled for hours' },
+  { id:'s3', name:'Skipped the gym' },
+  { id:'s4', name:'Ate garbage' },
+  { id:'s5', name:'Procrastinated all day' },
+  { id:'s6', name:'Stayed in bed' },
+];
+
+/* Backdated record: THE CEO took the two days the General spent on FIFA */
+const SEED_HISTORY = [
+  {
+    date:'2026-06-13', winner:1, d0:0, s0:1, d1:4, s1:0,
+    report:{
+      verdict:"THE CEO takes the day. THE GENERAL takes the controller. Pathetic.",
+      line0:"<b>THE GENERAL</b> sank a full 5 hours into FIFA career mode. He dragged a virtual League Two side toward glory while his actual life gathered dust in the corner. Zero deeds and one enormous sin. A textbook couch barnacle. The to-do list filed a missing persons report. His career mode is flourishing while his real career is on life support. Touch grass, gaffer. Your created players have better stats than you do.",
+      line1:"<b>THE CEO</b> used the daylight. Four deeds, zero sins, not a second wasted. While the enemy simulated success on a console, the CEO built it in the real world. A KING. Every box ticked. Every excuse strangled in its crib. The gap between these two today is disrespectful."
+    }
+  },
+  {
+    date:'2026-06-14', winner:1, d0:0, s0:1, d1:5, s1:0,
+    report:{
+      verdict:"THE CEO wins again. THE GENERAL wins the Carabao Cup on Legendary difficulty. Useless.",
+      line0:"<b>THE GENERAL</b> clocked ANOTHER 5 hour FIFA bender. Day two of Operation Do Nothing. Still zero deeds, still one enormous sin. An absolute Simpleton. Even the snooze button is embarrassed to be seen with this. He has now won three cup finals and exactly zero days. A man simulating a life on a screen because he cannot be bothered to live the real one. Useless on a generational level.",
+      line1:"<b>THE CEO</b> closed out five deeds with a clear conscience and not a single sin to his name. Built different. Output so clean you could eat off it. While one man negotiated transfer deadlines, the other was already three tasks deep before noon. The other side should be ashamed to share a calendar with this."
+    }
+  }
+];
+
+let state = {
+  players: ['THE GENERAL', 'THE CEO'],
+  goodHabits: JSON.parse(JSON.stringify(DEFAULT_GOOD)),
+  sins:       JSON.parse(JSON.stringify(DEFAULT_SINS)),
+  days:    {},
+  history: JSON.parse(JSON.stringify(SEED_HISTORY))
+};
+
+let activePlayer = 0;
+let pendingVerdict = null;
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const thisMonth = () => new Date().toISOString().slice(0, 7);   // 'YYYY-MM'
+let viewMonth = thisMonth();
+
+const ymOf = dateStr => dateStr.slice(0, 7);
+function monthLabel(ym){
+  const [y,m] = ym.split('-');
+  return new Date(+y, +m-1, 1).toLocaleDateString('en-IE', { month:'long', year:'numeric' });
+}
+function availableMonths(){
+  const set = new Set(state.history.map(h => ymOf(h.date)));
+  set.add(thisMonth());
+  return [...set].sort();
+}
+function monthNavHTML(){
+  const months = availableMonths();
+  const idx = months.indexOf(viewMonth);
+  const isCurrent = viewMonth === thisMonth();
+  return `<div class="month-nav">
+    <button class="mn-btn" ${idx<=0?'disabled':''} onclick="shiftMonth(-1)">‹</button>
+    <div class="mn-label">${monthLabel(viewMonth)}${isCurrent?'<span class="mn-tag">CURRENT CAMPAIGN</span>':''}</div>
+    <button class="mn-btn" ${idx>=months.length-1?'disabled':''} onclick="shiftMonth(1)">›</button>
+  </div>`;
+}
+window.shiftMonth = function(dir){
+  const months = availableMonths();
+  let idx = months.indexOf(viewMonth);
+  idx = Math.min(months.length-1, Math.max(0, idx + dir));
+  viewMonth = months[idx];
+  renderStandings();
+  renderHistory();
+};
+
+/* ══════════════════ FIREBASE I/O ══════════════════ */
+async function loadFromFirebase() {
+  if (!db) return;
+  const ref = doc(db, 'pw', 'state');
+  const snap = await getDoc(ref);
+  if (snap.exists()) migrate(snap.data());
+  onSnapshot(ref, snap => {
+    if (snap.exists()) {
+      migrate(snap.data());
+      renderAll();
+      const screen = document.querySelector('.screen.active');
+      if (screen) {
+        if (screen.id === 'screen-history')   renderHistory();
+        if (screen.id === 'screen-standings') renderStandings();
+        if (screen.id === 'screen-settings')  renderSettings();
+      }
+    }
+  });
+}
+function migrate(data) {
+  state = { ...state, ...data };
+  if (!state.goodHabits) state.goodHabits = JSON.parse(JSON.stringify(DEFAULT_GOOD));
+  if (!state.sins)       state.sins       = JSON.parse(JSON.stringify(DEFAULT_SINS));
+  if (!state.players)    state.players    = ['THE GENERAL', 'THE CEO'];
+}
+async function saveToFirebase() {
+  if (!db) return;
+  try { await setDoc(doc(db, 'pw', 'state'), state); }
+  catch (e) { console.error('Save failed', e); }
+}
+
+/* ══════════════════ HELPERS ══════════════════ */
+function dayData(pid, dk) {
+  const k = dk || todayKey();
+  if (!state.days[k]) state.days[k] = {};
+  if (!state.days[k][pid]) state.days[k][pid] = { deeds:[], good:{}, sins:[], sinChips:{} };
+  const d = state.days[k][pid];
+  d.deeds = d.deeds || []; d.good = d.good || {}; d.sins = d.sins || []; d.sinChips = d.sinChips || {};
+  return d;
+}
+function deedCount(pid, dk) {
+  const d = dayData(pid, dk);
+  const good = Object.values(d.good||{}).filter(Boolean).length;
+  return (d.deeds||[]).length + good;
+}
+function sinCount(pid, dk) {
+  const d = dayData(pid, dk);
+  const chips = Object.values(d.sinChips||{}).filter(Boolean).length;
+  return (d.sins||[]).length + chips;
+}
+function deedNames(pid, dk) {
+  const d = dayData(pid, dk);
+  const good = state.goodHabits.filter(h => d.good && d.good[h.id]).map(h => h.name);
+  return [...(d.deeds||[]).map(t=>t.name), ...good];
+}
+function sinNames(pid, dk) {
+  const d = dayData(pid, dk);
+  const chips = state.sins.filter(s => d.sinChips && d.sinChips[s.id]).map(s => s.name);
+  return [...(d.sins||[]).map(t=>t.name), ...chips];
+}
+function catLabel(c){ return {study:'Study',gym:'Gym',work:'Work',personal:'Personal'}[c]||c; }
+function isTodayLocked(){ return !!state.history.find(d => d.date === todayKey()); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const plz = (n,w) => n + ' ' + w + (n===1?'':'s');
+function fmtDate(dk){ return new Date(dk+'T12:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short'}); }
+
+/* ══════════════════ ROAST ENGINE ══════════════════ */
+const PRAISE_TITLE = ['a KING','the GOAT','an absolute MACHINE','a LEGEND','a one-man army','a certified savage','HIM','a titan among insects','built different','a war god','the people\'s champion','an apex predator','a force of nature','untouchable'];
+const PRAISE_OPEN = [
+  'bowed the day to their will',
+  'showed up and waged total war on mediocrity',
+  'operated on a different frequency entirely',
+  'made productivity look effortless',
+  'left scorched earth where excuses used to live',
+  'moved like a man with something to prove',
+  'turned the to-do list into a hit list',
+];
+const PRAISE_CLOSE = [
+  'Frame this day. Hang it in a museum.',
+  'The other side should be ashamed to share a calendar with this.',
+  'Greatness recognised. Carry on, champion.',
+  'This is what dominance smells like.',
+  'History will remember this performance.',
+  'Absolutely nothing to critique. Devastating.',
+];
+const INSULT_TITLE = ['a Useless Simpleton','a certified Punk','a glorified houseplant','an absolute Clown','a professional bed-warmer','a sentient pile of laundry','a couch barnacle','an NPC with no quests','a Walmart-brand human','a disgrace to the bloodline','a participation trophy with legs','a goblin','a waste of perfectly good oxygen','a cautionary tale'];
+const INSULT_OPEN = [
+  'fumbled the entire day like a greased watermelon',
+  'achieved the productivity of a damp towel',
+  'treated the day like an optional side quest and still failed it',
+  'set goals, looked at them, and went back to sleep',
+  'contributed roughly nothing to the war effort',
+  'spent the day collecting participation in their own life',
+  'was outworked by literally anyone with a pulse',
+];
+const INSULT_CLOSE = [
+  'Genuinely embarrassing. Do better, peasant.',
+  'The bar was on the floor and somehow you brought a shovel.',
+  'Touch grass, then touch your responsibilities.',
+  'Your ancestors are filing a complaint.',
+  'Be so for real right now.',
+  'This is a cry for help disguised as a Tuesday.',
+];
+const MID = ['decent','respectable','perfectly average','aggressively mid','fine, I guess','painfully ordinary'];
+const PRAISE_EXTRA = [
+  'Every box ticked. Every excuse strangled in its crib.',
+  'The kind of day they write motivational posters about.',
+  'No wasted minutes. No soft moments. No mercy for the clock.',
+  'While lesser men argued with their alarm clocks, this one was already three tasks deep.',
+  'Output so clean you could eat off it.',
+  'This is the standard. Everyone else is cosplaying productivity.',
+  'Momentum, discipline, and follow through for days.',
+];
+const INSULT_EXTRA = [
+  'The to-do list filed a missing persons report.',
+  'Somewhere a motivational speaker felt a sharp pain and did not know why.',
+  'Even the snooze button is embarrassed to be seen with this.',
+  'Productivity called. It hung up.',
+  'A masterclass in doing the bare minimum and somehow undershooting it.',
+  'If laziness were an Olympic sport, this one was too lazy to qualify.',
+  'The couch filed for joint custody and it has a case.',
+];
+const MID_EXTRA = [
+  'Not a disaster, not a triumph. Just vibes and a lukewarm effort.',
+  'The bare minimum wearing a trenchcoat, pretending to be a full day.',
+  'History will struggle to remember this one happened.',
+  'A day that happened TO them instead of one they made happen.',
+];
+function refs(arr){
+  if(!arr.length) return [];
+  const a=[...arr], out=[];
+  for(let k=0;k<2 && a.length;k++) out.push('“'+a.splice(Math.floor(Math.random()*a.length),1)[0]+'”');
+  return out;
+}
+
+function classify(d, s){
+  if (d===0 && s===0) return 'ghost';
+  if (s > d)          return 'disgrace';
+  if (d>=3 && s===0)  return 'glorious';
+  if (d > s)          return 'decent';
+  return 'mediocre';
+}
+
+/* Build a roast paragraph for one fighter */
+function roastLine(name, d, s, deeds, sins, isWinner){
+  const tier = classify(d, s);
+  const dr = refs(deeds), sr = refs(sins);
+  let body = '';
+
+  if (tier === 'glorious') {
+    body = `<b>${name}</b> ${pick(PRAISE_OPEN)}. ${plz(d,'deed')} logged and not one sin. The man is ${pick(PRAISE_TITLE)}. ${pick(PRAISE_EXTRA)} `;
+    if (dr.length) body += `Best of the bunch: ${dr[0]}${dr[1]?` and ${dr[1]}`:''}. `;
+    body += pick(PRAISE_CLOSE);
+  } else if (tier === 'decent') {
+    body = `<b>${name}</b> put up ${plz(d,'deed')}${s?` and still found time for ${plz(s,'sin')}`:''}. A ${pick(MID)} showing. `;
+    body += isWinner ? `Takes the day on grit, not glory. ${pick(PRAISE_TITLE).replace(/^a /,'A ').replace(/^an /,'An ')} on a budget. ` : `Did enough to keep the lights on and nothing more. `;
+    if (dr.length) body += `Credit for ${dr[0]}. `;
+    if (sr.length) body += `That ${sr[0]} though. We saw it, and we are holding it against you. `;
+    body += pick(PRAISE_EXTRA.concat(MID_EXTRA));
+  } else if (tier === 'mediocre') {
+    body = `<b>${name}</b> broke even. ${plz(d,'deed')} and ${plz(s,'sin')}. One step forward, one step into traffic. ${pick(MID_EXTRA)} `;
+    if (sr.length) body += `Exhibit A: ${sr[0]}${sr[1]?`, and let us not forget ${sr[1]}`:''}. `;
+    body += 'Pick a lane before the next battle.';
+  } else if (tier === 'disgrace') {
+    body = `<b>${name}</b> ${pick(INSULT_OPEN)}. More sins than deeds, ${s} to ${d}. A textbook ${pick(INSULT_TITLE).replace(/^an? /,'')}. ${pick(INSULT_EXTRA)} `;
+    if (sr.length) body += `The crowning crime was ${sr[0]}${sr[1]?`, with ${sr[1]} close behind`:''}. `;
+    if (dr.length) body += `That lone ${dr[0]} does not come close to balancing the ledger. `;
+    body += pick(INSULT_CLOSE);
+  } else { /* ghost */
+    body = `<b>${name}</b> logged nothing at all. A ghost. A no show. A blank page where a human being was meant to be. ${pick(INSULT_EXTRA)} ${pick(INSULT_TITLE).replace(/^a /,'A ').replace(/^an /,'An ')} who could not even dignify the battlefield with effort. ${pick(INSULT_CLOSE)}`;
+  }
+  return body;
+}
+
+function buildReport(dk){
+  const d0=deedCount(0,dk), s0=sinCount(0,dk), d1=deedCount(1,dk), s1=sinCount(1,dk);
+  const net0 = d0 - s0*1.25, net1 = d1 - s1*1.25;
+  let suggested;
+  if (Math.abs(net0-net1) < 0.01) suggested = 'tie';
+  else suggested = net0 > net1 ? 0 : 1;
+
+  const line0 = roastLine(state.players[0], d0, s0, deedNames(0,dk), sinNames(0,dk), suggested===0);
+  const line1 = roastLine(state.players[1], d1, s1, deedNames(1,dk), sinNames(1,dk), suggested===1);
+
+  let verdict;
+  if (suggested==='tie') verdict = `A bloody stalemate. Neither ${state.players[0]} nor ${state.players[1]} did enough to claim the day. Shameful symmetry.`;
+  else {
+    const W = state.players[suggested], L = state.players[suggested===0?1:0];
+    verdict = pick([
+      `${W} stands victorious over the carcass of ${L}'s ambition.`,
+      `${W} takes the day. ${L} takes the L.`,
+      `Crown goes to ${W}. ${L} can collect their participation sticker on the way out.`,
+      `${W} wins, clean and decisive. ${L} should reflect on their choices.`,
+    ]);
+  }
+  return { d0,s0,d1,s1, suggested, line0, line1, verdict };
+}
+
+/* ══════════════════ RENDER ══════════════════ */
+function renderScoreboard() {
+  const d0=deedCount(0), s0=sinCount(0), d1=deedCount(1), s1=sinCount(1);
+  document.querySelector('#sb-p0-name span:last-child').textContent = state.players[0];
+  document.querySelector('#sb-p1-name span:first-child').textContent = state.players[1];
+  document.getElementById('sb-p0-deeds').textContent = d0;
+  document.getElementById('sb-p1-deeds').textContent = d1;
+  document.getElementById('sb-p0-sins').textContent = s0;
+  document.getElementById('sb-p1-sins').textContent = s1;
+
+  const net0 = d0 - s0*1.25, net1 = d1 - s1*1.25;
+  const p0 = document.getElementById('sb-p0'), p1 = document.getElementById('sb-p1');
+  const n0 = document.getElementById('sb-p0-name'), n1 = document.getElementById('sb-p1-name');
+  p0.className = 'score-player p1'; p1.className = 'score-player p2';
+  n0.classList.remove('win'); n1.classList.remove('win');
+  if (net0 > net1)      { p0.classList.add('lead-gen'); n0.classList.add('win'); }
+  else if (net1 > net0) { p1.classList.add('lead-ceo'); n1.classList.add('win'); }
+}
+
+function renderDeeds() {
+  const d = dayData(activePlayer);
+  const locked = isTodayLocked();
+  const onClass = activePlayer === 0 ? 'on-gen' : 'on-ceo';
+
+  document.getElementById('goodhabit-grid').innerHTML = state.goodHabits.map(h => {
+    const on = !!(d.good && d.good[h.id]);
+    return `<div class="chip ${on?onClass:''}" ${locked?'':`onclick="toggleGood('${h.id}')"`}>
+      <span class="dot"></span><span>${esc(h.name)}</span></div>`;
+  }).join('');
+
+  document.getElementById('deed-list').innerHTML = (d.deeds||[]).map((t,i) => `
+    <div class="entry">
+      <div class="entry-left"><span>${esc(t.name)}</span>${t.dur?`<span class="cat-pill cp-dur">⏱ ${esc(t.dur)} min</span>`:''}</div>
+      ${locked?'':`<button class="del" onclick="delDeed(${i})">×</button>`}
+    </div>`).join('');
+}
+
+function renderSins() {
+  const d = dayData(activePlayer);
+  const locked = isTodayLocked();
+  document.getElementById('sin-grid').innerHTML = state.sins.map(s => {
+    const on = !!(d.sinChips && d.sinChips[s.id]);
+    return `<div class="chip sin ${on?'on':''}" ${locked?'':`onclick="toggleSinChip('${s.id}')"`}>
+      <span class="dot"></span><span>${esc(s.name)}</span></div>`;
+  }).join('');
+  document.getElementById('sin-list').innerHTML = (d.sins||[]).map((t,i) => `
+    <div class="entry">
+      <div class="entry-left"><span class="cat-pill cp-sin">Sin</span><span>${esc(t.name)}</span>${t.dur?`<span class="cat-pill cp-dur">⏱ ${esc(t.dur)} min</span>`:''}</div>
+      ${locked?'':`<button class="del" onclick="delSin(${i})">×</button>`}
+    </div>`).join('');
+}
+
+function renderLockArea() {
+  const el = document.getElementById('lock-area');
+  if (isTodayLocked()) {
+    el.innerHTML = `<div class="today-locked">⚔ Judgment passed. See the Dossier for today's verdict</div>`;
+  } else {
+    el.innerHTML = `<button class="btn-lock" onclick="openVerdict()">⚖ Pass judgment on today</button>
+      <div class="hint">Both fighters should finish logging before judgment is passed</div>`;
+  }
+}
+
+function renderPsel() {
+  const p0=document.getElementById('ps0'), p1=document.getElementById('ps1');
+  p0.textContent = state.players[0]; p1.textContent = state.players[1];
+  p0.className = 'psel-btn' + (activePlayer===0?' gen-active':'');
+  p1.className = 'psel-btn' + (activePlayer===1?' ceo-active':'');
+  document.getElementById('deed-tick').className = 'tick ' + (activePlayer===0?'tick-gen':'tick-ceo');
+  const ab = document.getElementById('add-deed-btn');
+  ab.className = 'btn ' + (activePlayer===0?'btn-add-gen':'btn-add-ceo');
+}
+
+function renderHistory() {
+  const p0=state.players[0], p1=state.players[1];
+  document.getElementById('dossier-monthnav').innerHTML = monthNavHTML();
+  const el = document.getElementById('history-list');
+  const entries = state.history.map((h,i)=>({h,i})).filter(o => ymOf(o.h.date)===viewMonth).reverse();
+  if (!entries.length) {
+    el.innerHTML = `<div class="card"><div class="empty">No battles fought in ${monthLabel(viewMonth)}.${viewMonth===thisMonth()?"<br>Lock in today's verdict to open the dossier.":''}</div></div>`;
+    return;
+  }
+  el.innerHTML = entries.map(({h, i:realIdx}) => {
+    const wname = h.winner==='tie' ? 'STALEMATE' : (h.winner===0?p0:p1);
+    const wcls  = h.winner==='tie' ? 'wb-tie' : (h.winner===0?'wb-gen':'wb-ceo');
+    const rep = h.report || {};
+    return `<div class="hist-day">
+      <div class="hist-top" onclick="toggleReport(${realIdx})" id="htop-${realIdx}">
+        <div>
+          <div class="hist-date">${fmtDate(h.date)}</div>
+          <div class="hist-meta">${esc(p0)} ${h.d0??0}⚔/${h.s0??0}☠ · ${esc(p1)} ${h.d1??0}⚔/${h.s1??0}☠</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="win-badge ${wcls}">${esc(wname)}</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="hist-report" id="hrep-${realIdx}">
+        ${rep.verdict ? `<div class="verdict-banner ${h.winner==='tie'?'vb-tie':(h.winner===0?'vb-gen':'vb-ceo')}" style="font-size:14px;margin:14px 0 12px">${esc(rep.verdict)}</div>` : ''}
+        <div class="roast gen"><div class="roast-name nm-gen">${esc(p0)}<span class="roast-stat">${plz(h.d0??0,'deed')} · ${plz(h.s0??0,'sin')}</span></div><div class="roast-body">${rep.line0||'—'}</div></div>
+        <div class="roast ceo"><div class="roast-name nm-ceo">${esc(p1)}<span class="roast-stat">${plz(h.d1??0,'deed')} · ${plz(h.s1??0,'sin')}</span></div><div class="roast-body">${rep.line1||'—'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleReport = function(idx){
+  document.getElementById('hrep-'+idx).classList.toggle('open');
+  document.getElementById('htop-'+idx).classList.toggle('open');
+};
+
+function renderStandings() {
+  const p0=state.players[0], p1=state.players[1];
+  document.getElementById('war-monthnav').innerHTML = monthNavHTML();
+  const H = state.history.filter(d=>ymOf(d.date)===viewMonth);
+  const w0=H.filter(d=>d.winner===0).length;
+  const w1=H.filter(d=>d.winner===1).length;
+  const ties=H.filter(d=>d.winner==='tie').length;
+  const total=H.length;
+
+  document.getElementById('st-days').textContent=total;
+  document.getElementById('st-p0-wins').textContent=w0;
+  document.getElementById('st-p1-wins').textContent=w1;
+  document.getElementById('st-ties').textContent=ties;
+  document.getElementById('st-p0-lbl').textContent=p0;
+  document.getElementById('st-p1-lbl').textContent=p1;
+  document.getElementById('leg-p0').textContent=p0;
+  document.getElementById('leg-p1').textContent=p1;
+
+  const leadEl=document.getElementById('overall-lead');
+  if(!total){ leadEl.innerHTML='<div class="empty">No territory claimed yet</div>'; }
+  else {
+    const pct0=Math.round((w0/total)*100), pct1=Math.round((w1/total)*100);
+    let head;
+    if(w0>w1) head=`<span class="nm-gen">${esc(p0)}</span> commands the war, +${w0-w1}`;
+    else if(w1>w0) head=`<span class="nm-ceo">${esc(p1)}</span> commands the war, +${w1-w0}`;
+    else head=`Dead even. ${w0} apiece. Next win breaks the deadlock.`;
+    leadEl.innerHTML=`
+      <div style="font-family:'Russo One';font-size:15px;text-transform:uppercase;letter-spacing:.03em">${head}</div>
+      <div class="lead-bar"><div class="lead-fill-gen" style="width:${pct0}%"></div><div class="lead-fill-ceo" style="width:${pct1}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span class="nm-gen">${w0} won</span><span class="nm-ceo">${w1} won</span></div>`;
+  }
+
+  // streak
+  const sb=document.getElementById('streak-box');
+  if(!total){ sb.innerHTML='<div class="empty">—</div>'; }
+  else {
+    let last=null, streak=0;
+    for(let i=H.length-1;i>=0;i--){
+      const w=H[i].winner;
+      if(w==='tie') break;
+      if(last===null){ last=w; streak=1; }
+      else if(w===last) streak++;
+      else break;
+    }
+    if(last===null) sb.innerHTML=`<div style="font-family:'Russo One';font-size:16px;color:var(--muted)">Last battle was a stalemate.</div>`;
+    else {
+      const nm=state.players[last], col=last===0?'var(--gen)':'var(--ceo)';
+      sb.innerHTML=`<div style="font-family:'Russo One';font-size:20px;text-transform:uppercase;color:${col}">${esc(nm)}: ${streak} in a row 🔥</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">${streak>=3?'A genuine warpath. Someone stop them.':'Momentum is building.'}</div>`;
+    }
+  }
+
+  document.getElementById('timeline').innerHTML=H.map(d=>{
+    if(d.winner===0) return `<div class="sdot sd-gen" title="${d.date}">G</div>`;
+    if(d.winner===1) return `<div class="sdot sd-ceo" title="${d.date}">C</div>`;
+    return `<div class="sdot sd-tie" title="${d.date}">=</div>`;
+  }).join('') || '<div class="empty">No campaign yet this month</div>';
+}
+
+function renderGoodHabitSettings() {
+  document.getElementById('goodhabit-settings-list').innerHTML = state.goodHabits.map((h,i)=>`
+    <div class="entry"><div class="entry-left"><span class="tick tick-gen"></span><span>${esc(h.name)}</span></div>
+    <button class="del" onclick="delGoodHabit(${i})">×</button></div>`).join('') || '<div class="empty">No rituals yet</div>';
+}
+function renderSinSettings() {
+  document.getElementById('sin-settings-list').innerHTML = state.sins.map((s,i)=>`
+    <div class="entry"><div class="entry-left"><span class="cat-pill cp-sin">Sin</span><span>${esc(s.name)}</span></div>
+    <button class="del" onclick="delSinPreset(${i})">×</button></div>`).join('') || '<div class="empty">No sin presets yet</div>';
+}
+function renderSettings() {
+  document.getElementById('set-p0').value = state.players[0];
+  document.getElementById('set-p1').value = state.players[1];
+  renderGoodHabitSettings();
+  renderSinSettings();
+}
+
+function renderAll() {
+  renderScoreboard(); renderDeeds(); renderSins(); renderPsel(); renderLockArea();
+  document.getElementById('date-chip').textContent = fmtDate(todayKey());
+}
+
+/* ══════════════════ ACTIONS ══════════════════ */
+window.selPlayer = function(idx){ activePlayer=idx; renderPsel(); renderDeeds(); renderSins(); };
+
+window.addDeed = async function(){
+  if(isTodayLocked()) return;
+  const name=document.getElementById('t-name').value.trim();
+  const dur=document.getElementById('t-dur').value.trim();
+  if(!name) return;
+  dayData(activePlayer).deeds.push({name,dur});
+  document.getElementById('t-name').value='';
+  document.getElementById('t-dur').value='';
+  await saveToFirebase(); renderScoreboard(); renderDeeds();
+};
+window.delDeed = async function(i){ dayData(activePlayer).deeds.splice(i,1); await saveToFirebase(); renderScoreboard(); renderDeeds(); };
+window.toggleGood = async function(id){
+  if(isTodayLocked()) return;
+  const d=dayData(activePlayer); d.good=d.good||{}; d.good[id]=!d.good[id];
+  await saveToFirebase(); renderScoreboard(); renderDeeds();
+};
+window.addSin = async function(){
+  if(isTodayLocked()) return;
+  const name=document.getElementById('s-name').value.trim();
+  const dur=document.getElementById('s-dur').value.trim();
+  if(!name) return;
+  dayData(activePlayer).sins.push({name,dur});
+  document.getElementById('s-name').value='';
+  document.getElementById('s-dur').value='';
+  await saveToFirebase(); renderScoreboard(); renderSins();
+};
+window.delSin = async function(i){ dayData(activePlayer).sins.splice(i,1); await saveToFirebase(); renderScoreboard(); renderSins(); };
+window.toggleSinChip = async function(id){
+  if(isTodayLocked()) return;
+  const d=dayData(activePlayer); d.sinChips=d.sinChips||{}; d.sinChips[id]=!d.sinChips[id];
+  await saveToFirebase(); renderScoreboard(); renderSins();
+};
+
+/* ── Verdict flow ── */
+window.openVerdict = function(){
+  if(isTodayLocked()){ return; }
+  const dk=todayKey();
+  const rep=buildReport(dk);
+  pendingVerdict={ dk, rep, chosen: rep.suggested };
+  renderVerdict();
+  document.getElementById('verdict-overlay').classList.add('open');
+};
+function renderVerdict(){
+  const {rep, chosen}=pendingVerdict;
+  const p0=state.players[0], p1=state.players[1];
+  const sugName = rep.suggested==='tie'?'STALEMATE':(rep.suggested===0?p0:p1);
+  const sugCls  = rep.suggested==='tie'?'vb-tie':(rep.suggested===0?'vb-gen':'vb-ceo');
+  document.getElementById('verdict-card').innerHTML=`
+    <div class="verdict-head">
+      <div class="verdict-kicker">The day is over</div>
+      <div class="verdict-title">Judgment</div>
+    </div>
+    <div class="roast gen"><div class="roast-name nm-gen">${esc(p0)}<span class="roast-stat">${plz(rep.d0,'deed')} · ${plz(rep.s0,'sin')}</span></div><div class="roast-body">${rep.line0}</div></div>
+    <div class="roast ceo"><div class="roast-name nm-ceo">${esc(p1)}<span class="roast-stat">${plz(rep.d1,'deed')} · ${plz(rep.s1,'sin')}</span></div><div class="roast-body">${rep.line1}</div></div>
+    <div class="verdict-banner ${sugCls}">⚖ The app's verdict: ${esc(sugName)}</div>
+    <div class="who-label">Confirm the winner. Your call is final.</div>
+    <div class="who-grid">
+      <button class="who-btn ${chosen===0?'sel-gen':''}" onclick="chooseWinner(0)">${esc(p0)}</button>
+      <button class="who-btn ${chosen==='tie'?'sel-tie':''}" onclick="chooseWinner('tie')">Stalemate</button>
+      <button class="who-btn ${chosen===1?'sel-ceo':''}" onclick="chooseWinner(1)">${esc(p1)}</button>
+    </div>
+    <div class="verdict-actions">
+      <button class="btn" onclick="closeVerdict()">Cancel</button>
+      <button class="btn btn-primary" onclick="sealVerdict()">⚔ Seal the verdict</button>
+    </div>`;
+}
+window.chooseWinner = function(w){ pendingVerdict.chosen=w; renderVerdict(); };
+window.closeVerdict = function(){ document.getElementById('verdict-overlay').classList.remove('open'); pendingVerdict=null; };
+window.sealVerdict = async function(){
+  if(!pendingVerdict) return;
+  const {dk, rep, chosen}=pendingVerdict;
+  if(isTodayLocked()){ closeVerdict(); return; }
+  state.history.push({
+    date: dk, winner: chosen,
+    d0: rep.d0, s0: rep.s0, d1: rep.d1, s1: rep.s1,
+    report: { verdict: rep.verdict, line0: rep.line0, line1: rep.line1 }
+  });
+  await saveToFirebase();
+  closeVerdict();
+  renderAll();
+  goTo('history');
+};
+
+/* ── Settings actions ── */
+window.addGoodHabit = async function(){
+  const name=document.getElementById('gh-name').value.trim();
+  if(!name) return;
+  state.goodHabits.push({id:'g'+Date.now(), name});
+  document.getElementById('gh-name').value='';
+  await saveToFirebase(); renderDeeds(); renderGoodHabitSettings();
+};
+window.delGoodHabit = async function(i){ state.goodHabits.splice(i,1); await saveToFirebase(); renderDeeds(); renderGoodHabitSettings(); };
+window.addSinPreset = async function(){
+  const name=document.getElementById('sn-name').value.trim();
+  if(!name) return;
+  state.sins.push({id:'s'+Date.now(), name});
+  document.getElementById('sn-name').value='';
+  await saveToFirebase(); renderSins(); renderSinSettings();
+};
+window.delSinPreset = async function(i){ state.sins.splice(i,1); await saveToFirebase(); renderSins(); renderSinSettings(); };
+window.saveNames = async function(){
+  const n0=document.getElementById('set-p0').value.trim();
+  const n1=document.getElementById('set-p1').value.trim();
+  if(n0) state.players[0]=n0; if(n1) state.players[1]=n1;
+  await saveToFirebase(); renderAll(); renderSettings(); renderStandings();
+};
+window.resetAll = async function(){
+  if(!confirm('Scorched earth. Wipe ALL data and restart the war? This cannot be undone.')) return;
+  state={ players: state.players, goodHabits: JSON.parse(JSON.stringify(DEFAULT_GOOD)), sins: JSON.parse(JSON.stringify(DEFAULT_SINS)), days:{}, history:[] };
+  await saveToFirebase(); renderAll();
+};
+
+window.goTo = function(screen){
+  ['today','history','standings','settings'].forEach(s=>{
+    document.getElementById('screen-'+s).className='screen'+(s===screen?' active':'');
+  });
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    b.className='nav-btn'+(['today','history','standings','settings'][i]===screen?' active':'');
+  });
+  if(screen==='history')   renderHistory();
+  if(screen==='standings') renderStandings();
+  if(screen==='settings')  renderSettings();
+};
+
+/* close overlay on backdrop click */
+document.getElementById('verdict-overlay').addEventListener('click', e=>{
+  if(e.target.id==='verdict-overlay') closeVerdict();
+});
+
+/* ══════════════════ INIT ══════════════════ */
+(async () => {
+  await loadFromFirebase();
+  renderAll();
+})();
+</script>
+</body>
+</html>
