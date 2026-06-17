@@ -396,6 +396,13 @@
     .mn-btn:disabled { opacity: .28; cursor: default; }
     .mn-label { font-family: 'Russo One', sans-serif; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; text-align: center; flex: 1; }
     .mn-tag { display:block; font-family:'Chakra Petch'; font-size: 10px; font-weight: 600; letter-spacing: .14em; color: var(--gold); margin-top: 2px; }
+    .dn-tag { display:inline-block; font-family:'Chakra Petch'; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
+    .dn-now { background: var(--surface3); color: var(--muted); }
+    .dn-ok { background: var(--gen-dim); color: var(--gen); border: 1px solid var(--gen-border); }
+    .dn-warn { background: rgba(217,45,79,0.12); color: #d92d4f; border: 1px solid rgba(217,45,79,0.35); }
+    .pending-nudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--gold-dim); border: 1px solid var(--gold-border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+    .pending-nudge b { color: var(--gold); font-family: 'Russo One', sans-serif; }
+    .pending-nudge .btn { flex-shrink: 0; }
 
     /* ── Settings ── */
     .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
@@ -476,6 +483,8 @@
 
   <!-- TODAY -->
   <div id="screen-today" class="screen active">
+    <div id="pending-nudge"></div>
+    <div id="day-nav"></div>
     <div class="psel">
       <button class="psel-btn gen-active" id="ps0" onclick="selPlayer(0)">THE GENERAL</button>
       <button class="psel-btn" id="ps1" onclick="selPlayer(1)">THE CEO</button>
@@ -667,6 +676,8 @@ let pendingVerdict = null;
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const thisMonth = () => new Date().toISOString().slice(0, 7);   // 'YYYY-MM'
 let viewMonth = thisMonth();
+let viewDay = todayKey();   // which day the Today screen is showing
+function addDaysStr(dk, n){ const d=new Date(dk+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 
 const ymOf = dateStr => dateStr.slice(0, 7);
 function monthLabel(ym){
@@ -730,7 +741,7 @@ async function saveToFirebase() {
 
 /* ══════════════════ HELPERS ══════════════════ */
 function dayData(pid, dk) {
-  const k = dk || todayKey();
+  const k = dk || viewDay;
   if (!state.days[k]) state.days[k] = {};
   if (!state.days[k][pid]) state.days[k][pid] = { deeds:[], good:{}, sins:[], sinChips:{} };
   const d = state.days[k][pid];
@@ -758,7 +769,7 @@ function sinNames(pid, dk) {
   return [...(d.sins||[]).map(t=>t.name), ...chips];
 }
 function catLabel(c){ return {study:'Study',gym:'Gym',work:'Work',personal:'Personal'}[c]||c; }
-function isTodayLocked(){ return !!state.history.find(d => d.date === todayKey()); }
+function isTodayLocked(){ return !!state.history.find(d => d.date === viewDay); }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const plz = (n,w) => n + ' ' + w + (n===1?'':'s');
@@ -833,64 +844,248 @@ function refs(arr){
   return out;
 }
 
-function classify(d, s){
-  if (d===0 && s===0) return 'ghost';
-  if (s > d)          return 'disgrace';
-  if (d>=3 && s===0)  return 'glorious';
-  if (d > s)          return 'decent';
-  return 'mediocre';
+function durMin(it){ return parseInt(it.dur)||0; }
+function durBucket(m){ if(!m) return 'none'; if(m<20) return 'quick'; if(m<60) return 'solid'; if(m<120) return 'serious'; if(m<240) return 'deep'; return 'marathon'; }
+
+/* full items WITH durations, so the report can weigh magnitude not headcount */
+function deedItems(pid, dk){
+  const d = dayData(pid, dk);
+  const custom = (d.deeds||[]).map(t=>({name:t.name, dur:t.dur||''}));
+  const habits = state.goodHabits.filter(h=>d.good && d.good[h.id]).map(h=>({name:h.name, dur:''}));
+  return custom.concat(habits);
+}
+function sinItems(pid, dk){
+  const d = dayData(pid, dk);
+  const custom = (d.sins||[]).map(t=>({name:t.name, dur:t.dur||''}));
+  const chips = state.sins.filter(s=>d.sinChips && d.sinChips[s.id]).map(s=>({name:s.name, dur:''}));
+  return custom.concat(chips);
+}
+/* effort, not count — a long grind outweighs a stack of two-minute ticks */
+function effortScore(items){ return items.reduce((a,it)=> a + 1 + Math.min(durMin(it)/60, 5), 0); }
+
+const OPEN_GLORY = [
+  'put on an absolute clinic today',
+  'treated the day like a personal conquest and won it',
+  'showed up swinging and never once sat down',
+  'made everyone else look like background characters',
+  'operated on a frequency the rest of us cannot tune into',
+];
+const OPEN_DECENT = [
+  'did honest work today, no medals but no shame',
+  'kept the engine running and the lights on',
+  'showed up and pushed the day forward',
+  'put real points on the board without lighting the sky on fire',
+];
+const OPEN_DISGRACE = [
+  'spent the day actively dodging his own life',
+  'turned procrastination into a full contact sport',
+  'treated his own potential as a polite suggestion',
+  'handed the day away for free and asked for nothing back',
+];
+const OPEN_GHOST = [
+  'recorded a flawless, fully committed nothing',
+  'did not so much as nod at productivity',
+  'put up a zero so clean it must have taken effort',
+];
+const TITLE_GOOD = ['a KING','the GOAT','an absolute machine','a one man army','built different','a war god','simply him','a problem for everyone in his path'];
+const TITLE_BAD = ['a Useless Simpleton','a certified Punk','a glorified houseplant','a couch barnacle','an NPC with no quests','a Walmart-brand human','a professional bed warmer','a Goblin in gym shorts'];
+const CLOSE_GOOD = [
+  'Frame the day and hang it somewhere holy.',
+  'This is the bar. Everyone else needs a stepladder.',
+  'Nothing left to mock. Genuinely nothing.',
+  'These two are not in the same league today.',
+];
+const CLOSE_BAD = [
+  'Do better, peasant.',
+  'Your ancestors are watching and they are filing complaints.',
+  'Touch grass. Then touch your responsibilities.',
+  'Be so for real tomorrow.',
+  'This was a cry for help wearing a calendar.',
+];
+
+/* ── narrative story engine (v3) — pick a hero/villain moment and tell a tale ── */
+function minutesPhrase(m){ return `${m} minutes`; }
+function fillN(s, name){ return s.replace(/\{n\}/g, name); }
+function fillXT(s, x, t){ return s.replace(/\{x\}/g, x).replace(/\{t\}/g, t); }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function joinItems(arr){ if(arr.length===1) return arr[0]; return arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1]; }
+
+const STORY = {
+  openGlory: [
+    'Gather round for the legend of {n}, who went to war with his own potential today and won in a landslide.',
+    'Somewhere a sculptor is taking measurements, because {n} just delivered the kind of day they teach in academies.',
+    'History will split {n}\'s life neatly into the era before today and the golden age that followed it.',
+    'The record will show that {n} woke up and declared open war on mediocrity, then won every single battle.',
+    'They will tell this story about {n} for years, probably around a fire, definitely in a reverent whisper.',
+  ],
+  openDecent: [
+    '{n} turned in a solid working man\'s day, the sort that keeps the lights on without troubling the history books.',
+    '{n} showed up, did the job, and clocked off with his dignity more or less intact.',
+    'No fireworks from {n} today, but no white flag either, and that counts for something.',
+    '{n} put in an honest shift and asked for nothing back except a quiet nod of respect.',
+  ],
+  openMediocre: [
+    '{n} spent the day in a perfect tug of war between effort and excuses, and the rope never moved an inch.',
+    '{n} took one proud step forward and one confident step directly into a puddle.',
+    '{n} did the bare minimum required to dodge a full investigation and not one molecule more.',
+    'The day mostly happened TO {n} rather than because of him.',
+  ],
+  openDisgrace: [
+    'Pull up a chair for the tragic comedy of {n}, a man who took one look at today and surrendered on the spot.',
+    'Future scholars will study {n}\'s day mostly to understand how a human being achieves so little on purpose.',
+    'Today {n} looked his potential dead in the eye, nodded politely, and went back to bed.',
+    'The story of {n}\'s day is short, tragic, and almost entirely horizontal.',
+    'Somewhere {n}\'s guardian angel quietly started applying for other jobs.',
+  ],
+  openGhost: [
+    'There is almost nothing to report about {n} today, which is itself a damning kind of report.',
+    '{n} achieved a flawless, fully committed nothing, and you almost have to admire the consistency.',
+    '{n} left a blank page where an entire day was supposed to be.',
+    'The highlight reel for {n} is a single still frame of an empty room.',
+  ],
+};
+const HERO_BIG = [
+  'The whole day orbited one monstrous effort: {x}, which he attacked for {t} without coming up for air. That is not a task, that is a siege.',
+  'The crown jewel was {x}. He gave it {t} of unbroken focus and never once reached for his phone, which in this century is basically sainthood.',
+  '{x} alone would have carried the day. He poured {t} into it and walked away looking like a man who had seen the face of God.',
+  'At the centre of it all sat {x}, {t} of pure relentless work. Most people cannot concentrate that hard on their own wedding.',
+];
+const HERO_MID = [
+  'The standout was {x}, a genuine {t} of head-down effort while the rest of the world doomscrolled.',
+  'He built the day around {x} and gave it a real {t}, no shortcuts, no whining.',
+  '{x} got the serious treatment: {t} of honest focus that most people fake and few deliver.',
+];
+const HERO_SMALL = [
+  'He still found a clean win in {x}, dispatched in a tidy {t}.',
+  'Even the small stuff counted: {x} knocked out in {t} flat.',
+];
+const HERO_NOTIME = [
+  'He got {x} done and got it done properly.',
+  'He quietly handled {x} like it was beneath him, which it probably was.',
+];
+const HERO_REACT = [
+  'The man did not blink.',
+  'No notes. No flaws. Pure dominance.',
+  'The audacity of being this productive should be illegal in several countries.',
+  'Lesser mortals need not apply.',
+  'This is the part where everyone else feels very small.',
+];
+const VILLAIN_BIG = [
+  'The crown jewel of his shame was {x}, into which he poured {t}. That is a feature length film of absolutely nothing.',
+  'One catastrophe towered above the rest: {x}, a glorious {t} set on fire. He could have learned an instrument. He chose this.',
+  'The headline crime was {x}. {t}, gone, cremated, never to return, and somewhere his future self is quietly weeping.',
+  'He devoted {t} to {x} with the focus of a monk and the judgement of a toddler. Breathtaking, in the worst possible way.',
+];
+const VILLAIN_MID = [
+  'The main event was {x}, a committed {t} of doing the wrong thing on purpose.',
+  'He sank {t} into {x} while his to-do list watched in open horror.',
+  '{x} ate up {t} that he will spend the rest of his life pretending never happened.',
+];
+const VILLAIN_SMALL = [
+  'The signature slip was {x}, a brisk {t} of pure avoidance.',
+  'Even his laziness was lazy: {x}, {t}, done.',
+];
+const VILLAIN_NOTIME = [
+  'The standout sin was {x}, no stopwatch required to know it was a choice.',
+  'He leaned into {x} like it was a core personality trait.',
+];
+const VILLAIN_REACT = [
+  'And he did it with his whole chest.',
+  'No shame. No hesitation. Pure sloth.',
+  'A commitment to failure most people could never muster.',
+  'He looked comfortable doing it, which is the worst part.',
+  'Somewhere a life coach felt a disturbance in the force.',
+];
+
+function heroBeat(it){
+  const m=durMin(it), x='“'+esc(it.name)+'”', t=minutesPhrase(m);
+  if(m>=120) return fillXT(pick(HERO_BIG), x, t);
+  if(m>=45)  return fillXT(pick(HERO_MID), x, t);
+  if(m>=1)   return fillXT(pick(HERO_SMALL), x, t);
+  return fillXT(pick(HERO_NOTIME), x, t);
+}
+function villainBeat(it){
+  const m=durMin(it), x='“'+esc(it.name)+'”', t=minutesPhrase(m);
+  if(m>=120) return fillXT(pick(VILLAIN_BIG), x, t);
+  if(m>=45)  return fillXT(pick(VILLAIN_MID), x, t);
+  if(m>=1)   return fillXT(pick(VILLAIN_SMALL), x, t);
+  return fillXT(pick(VILLAIN_NOTIME), x, t);
+}
+function deedClause(it){
+  const m=durMin(it), x='“'+esc(it.name)+'”';
+  return m ? `${pick(['put','sank','threw'])} ${m} minutes into ${x}` : `${pick(['ticked off','knocked out','saw to'])} ${x}`;
+}
+function sinClause(it){
+  const m=durMin(it), x='“'+esc(it.name)+'”';
+  return m ? `${pick(['burned','wasted','bled'])} ${m} minutes on ${x}` : `${pick(['confessed to','copped to','owned up to'])} ${x}`;
 }
 
-/* Build a roast paragraph for one fighter */
-function roastLine(name, d, s, deeds, sins, isWinner){
-  const tier = classify(d, s);
-  const dr = refs(deeds), sr = refs(sins);
-  let body = '';
+function narrate(name, deeds, sins, isWinner, tier){
+  const open = fillN(pick(STORY['open'+cap(tier)] || STORY.openMediocre), name);
 
-  if (tier === 'glorious') {
-    body = `<b>${name}</b> ${pick(PRAISE_OPEN)}. ${plz(d,'deed')} logged and not one sin. The man is ${pick(PRAISE_TITLE)}. ${pick(PRAISE_EXTRA)} `;
-    if (dr.length) body += `Best of the bunch: ${dr[0]}${dr[1]?` and ${dr[1]}`:''}. `;
-    body += pick(PRAISE_CLOSE);
-  } else if (tier === 'decent') {
-    body = `<b>${name}</b> put up ${plz(d,'deed')}${s?` and still found time for ${plz(s,'sin')}`:''}. A ${pick(MID)} showing. `;
-    body += isWinner ? `Takes the day on grit, not glory. ${pick(PRAISE_TITLE).replace(/^a /,'A ').replace(/^an /,'An ')} on a budget. ` : `Did enough to keep the lights on and nothing more. `;
-    if (dr.length) body += `Credit for ${dr[0]}. `;
-    if (sr.length) body += `That ${sr[0]} though. We saw it, and we are holding it against you. `;
-    body += pick(PRAISE_EXTRA.concat(MID_EXTRA));
-  } else if (tier === 'mediocre') {
-    body = `<b>${name}</b> broke even. ${plz(d,'deed')} and ${plz(s,'sin')}. One step forward, one step into traffic. ${pick(MID_EXTRA)} `;
-    if (sr.length) body += `Exhibit A: ${sr[0]}${sr[1]?`, and let us not forget ${sr[1]}`:''}. `;
-    body += 'Pick a lane before the next battle.';
-  } else if (tier === 'disgrace') {
-    body = `<b>${name}</b> ${pick(INSULT_OPEN)}. More sins than deeds, ${s} to ${d}. A textbook ${pick(INSULT_TITLE).replace(/^an? /,'')}. ${pick(INSULT_EXTRA)} `;
-    if (sr.length) body += `The crowning crime was ${sr[0]}${sr[1]?`, with ${sr[1]} close behind`:''}. `;
-    if (dr.length) body += `That lone ${dr[0]} does not come close to balancing the ledger. `;
-    body += pick(INSULT_CLOSE);
-  } else { /* ghost */
-    body = `<b>${name}</b> logged nothing at all. A ghost. A no show. A blank page where a human being was meant to be. ${pick(INSULT_EXTRA)} ${pick(INSULT_TITLE).replace(/^a /,'A ').replace(/^an /,'An ')} who could not even dignify the battlefield with effort. ${pick(INSULT_CLOSE)}`;
+  const ranked = deeds.concat(sins).slice().sort((a,b)=>durMin(b)-durMin(a));
+  const star = ranked[0];
+  let centre;
+  if(star){
+    const isDeed = deeds.indexOf(star)>=0;
+    centre = (isDeed?heroBeat(star):villainBeat(star)) + ' ' + pick(isDeed?HERO_REACT:VILLAIN_REACT);
+  } else {
+    centre = pick([
+      'There was no centrepiece, because there was no centre, because there was nothing.',
+      'Try as I might, I cannot find a single moment worth narrating. That silence is the story.',
+    ]);
   }
-  return body;
+
+  const oDeeds = deeds.filter(it=>it!==star);
+  const oSins  = sins.filter(it=>it!==star);
+  let support='';
+  if(oDeeds.length) support += `Around that, he also ${joinItems(oDeeds.map(deedClause))}. `;
+  if(oSins.length)  support += `${oDeeds.length?'For all that good work, ':''}the charge sheet was not empty either: he ${joinItems(oSins.map(sinClause))}. `;
+  if(!oDeeds.length && !oSins.length){
+    if(deeds.length && !sins.length) support += 'Not one sin to drag him back down. A clean sheet and a clear conscience. ';
+    else if(sins.length && !deeds.length) support += 'And there was nothing on the other side of the ledger to soften the blow. ';
+  }
+
+  let close;
+  if(tier==='glory' || (tier==='decent' && isWinner)) close = `On today's evidence ${name} is ${pick(TITLE_GOOD)}. ${pick(CLOSE_GOOD)}`;
+  else if(tier==='decent') close = `Steady, unspectacular, still standing. ${name} lives to fight another day. ${pick(CLOSE_BAD)}`;
+  else close = `${name} performed today like ${pick(TITLE_BAD)}. ${pick(CLOSE_BAD)}`;
+
+  return [`<b>${name}.</b> ${open}`, centre, support.trim(), close].filter(Boolean).join('<br><br>');
+}
+
+function buildPersonReport(name, deeds, sins, isWinner){
+  const de=effortScore(deeds), se=effortScore(sins);
+  let tier;
+  if(de===0 && se===0) tier='ghost';
+  else if(se>de)       tier='disgrace';
+  else if(se===0 && de>=4) tier='glory';
+  else if(de>se)       tier='decent';
+  else                 tier='mediocre';
+  return narrate(name, deeds, sins, isWinner, tier);
 }
 
 function buildReport(dk){
-  const d0=deedCount(0,dk), s0=sinCount(0,dk), d1=deedCount(1,dk), s1=sinCount(1,dk);
-  const net0 = d0 - s0*1.25, net1 = d1 - s1*1.25;
+  const D0=deedItems(0,dk), S0=sinItems(0,dk), D1=deedItems(1,dk), S1=sinItems(1,dk);
+  const d0=D0.length, s0=S0.length, d1=D1.length, s1=S1.length;
+  const net0 = effortScore(D0) - effortScore(S0)*1.2;
+  const net1 = effortScore(D1) - effortScore(S1)*1.2;
   let suggested;
-  if (Math.abs(net0-net1) < 0.01) suggested = 'tie';
+  if (Math.abs(net0-net1) < 0.5) suggested = 'tie';
   else suggested = net0 > net1 ? 0 : 1;
 
-  const line0 = roastLine(state.players[0], d0, s0, deedNames(0,dk), sinNames(0,dk), suggested===0);
-  const line1 = roastLine(state.players[1], d1, s1, deedNames(1,dk), sinNames(1,dk), suggested===1);
+  const line0 = buildPersonReport(state.players[0], D0, S0, suggested===0);
+  const line1 = buildPersonReport(state.players[1], D1, S1, suggested===1);
 
   let verdict;
-  if (suggested==='tie') verdict = `A bloody stalemate. Neither ${state.players[0]} nor ${state.players[1]} did enough to claim the day. Shameful symmetry.`;
+  if (suggested==='tie') verdict = `A dead heat. Neither ${state.players[0]} nor ${state.players[1]} did enough to bury the other. Shameful symmetry.`;
   else {
     const W = state.players[suggested], L = state.players[suggested===0?1:0];
     verdict = pick([
-      `${W} stands victorious over the carcass of ${L}'s ambition.`,
-      `${W} takes the day. ${L} takes the L.`,
-      `Crown goes to ${W}. ${L} can collect their participation sticker on the way out.`,
-      `${W} wins, clean and decisive. ${L} should reflect on their choices.`,
+      `${W} stands over the wreckage of ${L}'s day.`,
+      `${W} takes it. ${L} takes the loss and the lesson.`,
+      `The crown goes to ${W}. ${L} can show himself out.`,
+      `${W} wins clean. ${L} has some thinking to do tonight.`,
     ]);
   }
   return { d0,s0,d1,s1, suggested, line0, line1, verdict };
@@ -950,10 +1145,11 @@ function renderSins() {
 
 function renderLockArea() {
   const el = document.getElementById('lock-area');
+  const dayLabel = viewDay===todayKey() ? 'today' : fmtDate(viewDay);
   if (isTodayLocked()) {
-    el.innerHTML = `<div class="today-locked">⚔ Judgment passed. See the Dossier for today's verdict</div>`;
+    el.innerHTML = `<div class="today-locked">⚔ Judgment passed for ${dayLabel}. See the Dossier for the verdict</div>`;
   } else {
-    el.innerHTML = `<button class="btn-lock" onclick="openVerdict()">⚖ Pass judgment on today</button>
+    el.innerHTML = `<button class="btn-lock" onclick="openVerdict()">⚖ Pass judgment on ${dayLabel}</button>
       <div class="hint">Both fighters should finish logging before judgment is passed</div>`;
   }
 }
@@ -1082,7 +1278,46 @@ function renderSettings() {
   renderSinSettings();
 }
 
+function renderDayNav(){
+  const el=document.getElementById('day-nav');
+  if(!el) return;
+  const isToday = viewDay===todayKey();
+  const locked = !!state.history.find(d=>d.date===viewDay);
+  let tag;
+  if(locked) tag='<span class="dn-tag dn-ok">judged ✓</span>';
+  else if(isToday) tag='<span class="dn-tag dn-now">current day</span>';
+  else tag='<span class="dn-tag dn-warn">not judged yet</span>';
+  el.innerHTML = `<div class="month-nav">
+      <button class="mn-btn" onclick="shiftDay(-1)" title="Previous day">‹</button>
+      <div class="mn-label" style="font-size:14px">${fmtDate(viewDay)}${tag}</div>
+      <button class="mn-btn" ${isToday?'disabled':''} onclick="shiftDay(1)" title="Next day">›</button>
+    </div>${isToday?'':`<button class="btn btn-full" style="margin:-2px 0 14px" onclick="jumpToday()">↩ Back to today</button>`}`;
+}
+
+function pendingJudgmentDays(){
+  const today=todayKey();
+  return Object.keys(state.days).filter(dk=>{
+    if(dk>=today) return false;
+    if(state.history.find(h=>h.date===dk)) return false;
+    return (deedCount(0,dk)+sinCount(0,dk)+deedCount(1,dk)+sinCount(1,dk))>0;
+  }).sort();
+}
+function renderPendingNudge(){
+  const el=document.getElementById('pending-nudge');
+  if(!el) return;
+  const pend=pendingJudgmentDays().filter(dk=>dk!==viewDay);
+  if(!pend.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<div class="pending-nudge">
+      <div><b>${pend.length}</b> past day${pend.length>1?'s':''} still need${pend.length>1?'':'s'} a verdict.</div>
+      <button class="btn" onclick="judgeOldest()">Go to oldest</button>
+    </div>`;
+}
+window.shiftDay=function(dir){ const n=addDaysStr(viewDay,dir); if(n>todayKey()) return; viewDay=n; renderAll(); };
+window.jumpToday=function(){ viewDay=todayKey(); renderAll(); };
+window.judgeOldest=function(){ const p=pendingJudgmentDays(); if(p.length){ viewDay=p[0]; renderAll(); } };
+
 function renderAll() {
+  renderDayNav(); renderPendingNudge();
   renderScoreboard(); renderDeeds(); renderSins(); renderPsel(); renderLockArea();
   document.getElementById('date-chip').textContent = fmtDate(todayKey());
 }
@@ -1126,7 +1361,7 @@ window.toggleSinChip = async function(id){
 /* ── Verdict flow ── */
 window.openVerdict = function(){
   if(isTodayLocked()){ return; }
-  const dk=todayKey();
+  const dk=viewDay;
   const rep=buildReport(dk);
   pendingVerdict={ dk, rep, chosen: rep.suggested };
   renderVerdict();
@@ -1168,6 +1403,8 @@ window.sealVerdict = async function(){
     report: { verdict: rep.verdict, line0: rep.line0, line1: rep.line1 }
   });
   await saveToFirebase();
+  viewMonth = ymOf(dk);   // show the dossier month the judged day belongs to
+  viewDay = todayKey();   // return the Today screen to the current day
   closeVerdict();
   renderAll();
   goTo('history');
